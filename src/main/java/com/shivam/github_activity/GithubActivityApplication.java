@@ -1,6 +1,7 @@
 package com.shivam.github_activity;
 
 import java.util.Scanner;
+import java.util.List;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -46,13 +47,47 @@ public class GithubActivityApplication implements CommandLineRunner{
 			ResponseEntity<GitHubEvent[]> response = restTemplate.getForEntity(eventsUrl, GitHubEvent[].class);
 			GitHubEvent[] events = response.getBody();
 
-			System.out.println("\n--- Recent Public Activity ---");
+			System.out.println("\n--- Recent Commits ---");
+			int commitCount = 0;
 
-			for (int i = 0; i < Math.min(5, events.length); i++) {
-				System.out.println("Type: " + events[i].getType() + " | Date: " +events[i].getCreated_at());
+			for (GitHubEvent event : events) {
+				if ("PushEvent".equals(event.getType()) && event.getPayload() != null) {
+					List<GitHubEvent.Payload.Commit> commits = event.getPayload().getCommits();
+
+					if (commits != null) {
+						for (GitHubEvent.Payload.Commit commit : commits) {
+							if (commitCount >= 5) {
+								break;
+							}
+
+							System.out.println("[" + event.getRepo().getName() +"] " + commit.getMessage());
+							commitCount++;
+						}
+					}
+				}
+				if (commitCount >= 5) break;
 			}
 		} catch (Exception e) {
 			System.out.println("❌ Failed to fetch user activity. " + e.getMessage());
+		}
+
+		String reposUrl = "https://api.github.com/users/" + userName + "/repos";
+
+		try {
+			ResponseEntity<GitHubRepo[]> repoResponse = restTemplate.getForEntity(reposUrl, GitHubRepo[].class);
+
+			GitHubRepo[] repos = repoResponse.getBody();
+
+    		System.out.println("\n--- Public Repositories ---");
+    		for (int i = 0; i < Math.min(5, repos.length); i++) {
+        		GitHubRepo repo = repos[i];
+        		System.out.println("[" + repo.getName() + "] ⭐ " + repo.getStargazers_count() + " | 🍴 " + repo.getForks_count());
+        		System.out.println("URL: " + repo.getHtml_url());
+        		System.out.println("Desc: " + repo.getDescription());
+        		System.out.println();
+    		}
+		} catch (Exception e) {
+			System.out.println("❌ Failed to fetch repositories. " + e.getMessage());
 		}
 		sc.close();
 	}
