@@ -1,6 +1,7 @@
 # ⚡ GitHub User Activity CLI
 
 A powerful Java + Spring Boot command-line tool to fetch a GitHub user's:
+This is a solution to the URL shortener project on roadmap.sh : https://roadmap.sh/projects/github-user-activity
 
 - 👤 Profile Info  
 - 📝 Recent Commits  
